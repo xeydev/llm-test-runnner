@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Internet permission needed for LLM API calls during test artifact generation -->
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
+
