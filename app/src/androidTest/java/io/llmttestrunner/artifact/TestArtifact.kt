@@ -13,8 +13,6 @@ data class TestArtifact(
     val testName: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val llmProvider: String = "",
-    val llmModel: String = "",
     val steps: List<TestStep> = emptyList()
 )
 
@@ -59,25 +57,8 @@ enum class ActionType {
  * This helps LLM understand the UI structure.
  */
 data class ScreenContext(
-    val timestamp: Long = System.currentTimeMillis(),
-    val viewHierarchy: String = "",
-    val screenshotPath: String? = null,
-    val visibleElements: List<ElementInfo> = emptyList()
-)
-
-/**
- * Information about a UI element.
- */
-data class ElementInfo(
-    val id: String = "",
-    val tag: String = "",
-    val text: String = "",
-    val contentDescription: String = "",
-    val className: String = "",
-    val bounds: String = "",
-    val isClickable: Boolean = false,
-    val isEnabled: Boolean = false,
-    val isVisible: Boolean = false
+    val timestamp: Long,
+    val viewHierarchy: String,
 )
 
 /**
@@ -160,9 +141,15 @@ class ArtifactManager(
     companion object {
         /**
          * Get default artifact manager for Android instrumentation tests.
+         * 
+         * Note: With the bridge architecture, artifacts are primarily managed 
+         * by the bridge server which saves them to the project directory.
+         * This manager is kept for backward compatibility and local caching.
          */
         fun getDefault(context: android.content.Context): ArtifactManager {
-            val artifactsDir = File(context.getExternalFilesDir(null), "test_artifacts")
+            // Use /data/local/tmp for temporary storage on device
+            // The bridge server handles persistent storage in project directory
+            val artifactsDir = File("/data/local/tmp/llm_test_artifacts")
             return ArtifactManager(artifactsDir)
         }
     }

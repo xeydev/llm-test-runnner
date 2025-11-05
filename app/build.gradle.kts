@@ -74,3 +74,18 @@ dependencies {
     androidTestImplementation(libs.gson)
     androidTestImplementation(libs.okhttp)
 }
+
+/**
+ * Task to set up ADB reverse port forwarding for bridge server connection
+ */
+tasks.register("setupAdbReverse") {
+    group = "llm-test"
+    description = "Sets up ADB reverse port forwarding for LLM bridge server"
+    
+    doLast {
+        exec {
+            commandLine("adb", "reverse", "tcp:37546", "tcp:37546")
+        }
+        println("✓ ADB reverse configured: device:37546 -> host:37546")
+    }
+}

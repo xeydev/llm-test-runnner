@@ -1,7 +1,6 @@
 package io.llmttestrunner.artifact
 
 import io.llmttestrunner.llm.LLMService
-import java.util.UUID
 
 /**
  * Generates test artifacts from natural language steps using LLM.
@@ -12,94 +11,8 @@ import java.util.UUID
  * 3. Creating a test artifact with all the information
  */
 class ArtifactGenerator(
-    private val llmService: LLMService,
-    private val screenStateCapture: ScreenStateCapture
 ) {
-    
-    /**
-     * Generate a test artifact from natural language steps.
-     * 
-     * @param testName The name of the test
-     * @param steps List of natural language step descriptions
-     * @param captureScreenState Whether to capture screen state for each step
-     * @return Generated test artifact
-     */
-    fun generateArtifact(
-        testName: String,
-        steps: List<String>,
-        captureScreenState: Boolean = true
-    ): TestArtifact {
-        println("🤖 Generating test artifact for: $testName")
-        println("   Steps: ${steps.size}")
-        
-        val screenContext = if (captureScreenState) {
-            try {
-                screenStateCapture.captureScreenState()
-            } catch (e: Exception) {
-                println("⚠ Failed to capture screen state: ${e.message}")
-                null
-            }
-        } else {
-            null
-        }
-        
-        val testSteps = steps.mapIndexed { index, naturalLanguage ->
-            println("   Processing step ${index + 1}/${steps.size}: $naturalLanguage")
-            convertStepToCommand(naturalLanguage, screenContext)
-        }
-        
-        return TestArtifact(
-            testName = testName,
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis(),
-            llmProvider = llmService.javaClass.simpleName,
-            llmModel = "unknown", // Can be enhanced to track model name
-            steps = testSteps
-        )
-    }
-    
-    /**
-     * Convert a single natural language step to a structured command.
-     */
-    private fun convertStepToCommand(
-        naturalLanguage: String,
-        screenContext: ScreenContext?
-    ): TestStep {
-        // Build prompt with screen context
-        val prompt = buildPrompt(naturalLanguage, screenContext)
-        
-        // Use LLM to parse the command
-        val commandString = llmService.parseCommand(prompt)
-        
-        // Convert string command to structured TestCommand
-        val testCommand = parseCommandString(commandString)
-        
-        return TestStep(
-            id = UUID.randomUUID().toString(),
-            naturalLanguage = naturalLanguage,
-            generatedCommand = testCommand,
-            screenContext = screenContext
-        )
-    }
-    
-    /**
-     * Build a prompt for the LLM that includes screen context.
-     */
-    private fun buildPrompt(naturalLanguage: String, screenContext: ScreenContext?): String {
-        val prompt = StringBuilder()
-        
-        if (screenContext != null && screenContext.visibleElements.isNotEmpty()) {
-            prompt.append("Current screen state:\n")
-            prompt.append(screenStateCapture.generateScreenSummary(screenContext))
-            prompt.append("\n\n")
-        }
-        
-        prompt.append("Convert this test instruction to a structured command:\n")
-        prompt.append("\"$naturalLanguage\"\n")
-        
-        return prompt.toString()
-    }
-    
+
     /**
      * Parse a command string into a structured TestCommand.
      * 

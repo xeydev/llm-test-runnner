@@ -1,40 +1,40 @@
 package io.llmttestrunner.adapter
 
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.printToString
 import io.llmttestrunner.artifact.TestCommand
 import io.llmttestrunner.artifact.ActionType
+import io.llmttestrunner.artifact.ScreenContext
 
 /**
  * Interface for test framework adapters.
- * 
+ *
  * Implementations provide integration with different testing frameworks
  * like Espresso, Kaspresso, Compose Testing, Robolectric, etc.
  */
 interface TestFrameworkAdapter {
-    
+
     /**
      * Execute a test command using the underlying test framework.
      */
     fun execute(command: TestCommand)
-    
+
     /**
      * Check if this adapter supports the given action type.
      */
     fun supports(actionType: ActionType): Boolean
-    
-    /**
-     * Get the name of the testing framework this adapter supports.
-     */
-    fun getFrameworkName(): String
+
+    fun captureScreenState(): ScreenContext
 }
 
 /**
  * Base implementation with common command execution logic.
  */
 abstract class BaseTestFrameworkAdapter : TestFrameworkAdapter {
-    
+
     override fun execute(command: TestCommand) {
         println("▶ Executing ${command.action}: ${command.parameters}")
-        
+
         try {
             when (command.action) {
                 ActionType.CLICK -> executeClick(command.parameters)
@@ -49,14 +49,14 @@ abstract class BaseTestFrameworkAdapter : TestFrameworkAdapter {
                 ActionType.WAIT -> executeWait(command.parameters)
                 ActionType.CUSTOM -> executeCustom(command.parameters)
             }
-            
+
             // Small delay for stability
             Thread.sleep(300)
         } catch (e: Exception) {
             throw TestExecutionException("Failed to execute ${command.action}: ${e.message}", e)
         }
     }
-    
+
     protected abstract fun executeClick(params: Map<String, String>)
     protected abstract fun executeTypeText(params: Map<String, String>)
     protected abstract fun executeClearText(params: Map<String, String>)
@@ -66,15 +66,31 @@ abstract class BaseTestFrameworkAdapter : TestFrameworkAdapter {
     protected abstract fun executeVerifyText(params: Map<String, String>)
     protected abstract fun executeVerifyVisible(params: Map<String, String>)
     protected abstract fun executeVerifyNotVisible(params: Map<String, String>)
-    
+
     protected open fun executeWait(params: Map<String, String>) {
         val seconds = params["seconds"]?.toIntOrNull() ?: 1
         Thread.sleep(seconds * 1000L)
     }
-    
+
     protected open fun executeCustom(params: Map<String, String>) {
-        throw UnsupportedOperationException("Custom action not implemented")
+        val command = params["command"] ?: "unknown"
+        println("⚠ Custom command not implemented: $command")
+        // Subclasses can override to handle custom commands
     }
+
+    /**
+     * Capture current screen state.
+     */
+    override fun captureScreenState(): ScreenContext {
+        val hierarchy = captureViewHierarchy()
+
+        return ScreenContext(
+            timestamp = System.currentTimeMillis(),
+            viewHierarchy = hierarchy,
+        )
+    }
+
+    protected abstract fun captureViewHierarchy(): String
 }
 
 /**
