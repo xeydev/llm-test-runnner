@@ -116,8 +116,7 @@ class BridgeService(
         
         logger.info("Generating: ${request.userStep}")
         val command = llmProvider.generateCommand(prompt)
-        logger.info("→ $command")
-        
+
         cache[cacheKey] = command
         
         return command

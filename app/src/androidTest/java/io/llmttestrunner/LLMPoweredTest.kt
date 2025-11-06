@@ -1,6 +1,7 @@
 package io.llmttestrunner
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kaspersky.components.composesupport.config.withComposeSupport
 import com.kaspersky.kaspresso.kaspresso.Kaspresso
@@ -163,7 +164,7 @@ class LLMPoweredTest : TestCase(
     ) {
         step("Please type 'Natural language test'")
         step("Now click the submit button")
-        step("Check that 'Last submitted: Natural language test' is displayed")
+        step("Check that 'Last submitted: Natural language test' is displayed and visible to user")
     }
 
 }
