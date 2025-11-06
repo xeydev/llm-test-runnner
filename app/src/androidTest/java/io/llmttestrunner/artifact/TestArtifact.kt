@@ -9,10 +9,7 @@ import java.io.File
  * This is the structure that gets saved to YAML/JSON files.
  */
 data class TestArtifact(
-    val version: String = "1.0",
-    val testName: String = "",
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis(),
     val steps: List<TestStep> = emptyList()
 )
 
@@ -21,36 +18,10 @@ data class TestArtifact(
  * and the generated command.
  */
 data class TestStep(
-    val id: String,
     val naturalLanguage: String,
-    val generatedCommand: TestCommand,
-    val screenContext: ScreenContext? = null
+    val generatedCommands: List<TestCommand>,
+    val screenContext: ScreenContext
 )
-
-/**
- * A structured test command that can be executed by framework adapters.
- */
-data class TestCommand(
-    val action: ActionType,
-    val parameters: Map<String, String> = emptyMap()
-)
-
-/**
- * Types of actions that can be performed in tests.
- */
-enum class ActionType {
-    CLICK,
-    TYPE_TEXT,
-    CLEAR_TEXT,
-    SCROLL_DOWN,
-    SCROLL_UP,
-    SCROLL_TO_ELEMENT,
-    VERIFY_TEXT,
-    VERIFY_VISIBLE,
-    VERIFY_NOT_VISIBLE,
-    WAIT,
-    CUSTOM
-}
 
 /**
  * Screen context captured at the time of artifact generation.
@@ -60,6 +31,48 @@ data class ScreenContext(
     val timestamp: Long,
     val viewHierarchy: String,
 )
+
+/**
+ * Represents a test command with action, optional value, and matcher.
+ */
+data class TestCommand(
+    val action: ActionType,
+    val value: String? = null,
+    val matcher: Matcher
+)
+
+/**
+ * Matcher to identify UI elements.
+ */
+data class Matcher(
+    val type: MatcherType,
+    val value: String
+)
+
+/**
+ * Available matcher types for identifying UI elements.
+ */
+enum class MatcherType {
+    TEST_TAG,
+    HIERARCHY,
+    TEXT,
+    CONTENT_DESCRIPTION
+}
+
+/**
+ * Available action types for test commands.
+ */
+enum class ActionType {
+    CLICK,
+    LONG_CLICK,
+    DOUBLE_CLICK,
+    TYPE_TEXT,
+    CLEAR_TEXT,
+    SCROLL_TO,
+    ASSERT_VISIBLE,
+    ASSERT_TEXT,
+    ASSERT_CONTAINS
+}
 
 /**
  * Manager for reading, writing, and validating test artifacts.

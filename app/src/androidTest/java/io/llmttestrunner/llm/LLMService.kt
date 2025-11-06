@@ -1,5 +1,8 @@
 package io.llmttestrunner.llm
 
+import io.llmttestrunner.artifact.ScreenContext
+import org.json.JSONArray
+
 /**
  * Interface for LLM service providers.
  * 
@@ -8,20 +11,6 @@ package io.llmttestrunner.llm
  */
 interface LLMService {
 
-    /**
-     * Parse a single natural language instruction into a specific test command.
-     * 
-     * @param instruction A single instruction like "I want to type 'hello' in the text box"
-     * @return A structured command like "type text 'hello'"
-     */
-    fun parseCommand(instruction: String): String
-    
-    /**
-     * Validate if a command is properly formatted.
-     * 
-     * @param command The command to validate
-     * @return True if the command is valid
-     */
-    fun validateCommand(command: String): Boolean
+    fun generateCommand(step: String, screenContext: ScreenContext): JSONArray
 }
 

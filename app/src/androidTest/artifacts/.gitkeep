@@ -1,0 +1,9 @@
+# This directory contains generated test artifacts
+# Artifacts are JSON files with cached LLM-generated commands
+#
+# You can commit artifacts to version control for:
+# - Faster test execution (no LLM API calls)
+# - Offline testing
+# - Cost savings
+# - Shared team artifacts
+

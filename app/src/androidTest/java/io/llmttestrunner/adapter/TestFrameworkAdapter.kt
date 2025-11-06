@@ -19,11 +19,6 @@ interface TestFrameworkAdapter {
      */
     fun execute(command: TestCommand)
 
-    /**
-     * Check if this adapter supports the given action type.
-     */
-    fun supports(actionType: ActionType): Boolean
-
     fun captureScreenState(): ScreenContext
 }
 
@@ -33,21 +28,19 @@ interface TestFrameworkAdapter {
 abstract class BaseTestFrameworkAdapter : TestFrameworkAdapter {
 
     override fun execute(command: TestCommand) {
-        println("▶ Executing ${command.action}: ${command.parameters}")
+        println("▶ Executing ${command.action} on ${command.matcher}")
 
         try {
             when (command.action) {
-                ActionType.CLICK -> executeClick(command.parameters)
-                ActionType.TYPE_TEXT -> executeTypeText(command.parameters)
-                ActionType.CLEAR_TEXT -> executeClearText(command.parameters)
-                ActionType.SCROLL_DOWN -> executeScrollDown(command.parameters)
-                ActionType.SCROLL_UP -> executeScrollUp(command.parameters)
-                ActionType.SCROLL_TO_ELEMENT -> executeScrollToElement(command.parameters)
-                ActionType.VERIFY_TEXT -> executeVerifyText(command.parameters)
-                ActionType.VERIFY_VISIBLE -> executeVerifyVisible(command.parameters)
-                ActionType.VERIFY_NOT_VISIBLE -> executeVerifyNotVisible(command.parameters)
-                ActionType.WAIT -> executeWait(command.parameters)
-                ActionType.CUSTOM -> executeCustom(command.parameters)
+                ActionType.CLICK -> executeClick(command)
+                ActionType.LONG_CLICK -> executeLongClick(command)
+                ActionType.DOUBLE_CLICK -> executeDoubleClick(command)
+                ActionType.TYPE_TEXT -> executeTypeText(command)
+                ActionType.CLEAR_TEXT -> executeClearText(command)
+                ActionType.SCROLL_TO -> executeScrollTo(command)
+                ActionType.ASSERT_VISIBLE -> executeAssertVisible(command)
+                ActionType.ASSERT_TEXT -> executeAssertText(command)
+                ActionType.ASSERT_CONTAINS -> executeAssertContains(command)
             }
 
             // Small delay for stability
@@ -57,26 +50,15 @@ abstract class BaseTestFrameworkAdapter : TestFrameworkAdapter {
         }
     }
 
-    protected abstract fun executeClick(params: Map<String, String>)
-    protected abstract fun executeTypeText(params: Map<String, String>)
-    protected abstract fun executeClearText(params: Map<String, String>)
-    protected abstract fun executeScrollDown(params: Map<String, String>)
-    protected abstract fun executeScrollUp(params: Map<String, String>)
-    protected abstract fun executeScrollToElement(params: Map<String, String>)
-    protected abstract fun executeVerifyText(params: Map<String, String>)
-    protected abstract fun executeVerifyVisible(params: Map<String, String>)
-    protected abstract fun executeVerifyNotVisible(params: Map<String, String>)
-
-    protected open fun executeWait(params: Map<String, String>) {
-        val seconds = params["seconds"]?.toIntOrNull() ?: 1
-        Thread.sleep(seconds * 1000L)
-    }
-
-    protected open fun executeCustom(params: Map<String, String>) {
-        val command = params["command"] ?: "unknown"
-        println("⚠ Custom command not implemented: $command")
-        // Subclasses can override to handle custom commands
-    }
+    protected abstract fun executeClick(command: TestCommand)
+    protected abstract fun executeLongClick(command: TestCommand)
+    protected abstract fun executeDoubleClick(command: TestCommand)
+    protected abstract fun executeTypeText(command: TestCommand)
+    protected abstract fun executeClearText(command: TestCommand)
+    protected abstract fun executeScrollTo(command: TestCommand)
+    protected abstract fun executeAssertVisible(command: TestCommand)
+    protected abstract fun executeAssertText(command: TestCommand)
+    protected abstract fun executeAssertContains(command: TestCommand)
 
     /**
      * Capture current screen state.

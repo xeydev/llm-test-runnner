@@ -1,13 +1,19 @@
 package io.llmttestrunner
 
-import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import io.llmttestrunner.adapter.TestFrameworkAdapter
-import io.llmttestrunner.artifact.ArtifactGenerator
+import io.llmttestrunner.artifact.ActionType
 import io.llmttestrunner.artifact.ArtifactManager
+import io.llmttestrunner.artifact.Matcher
+import io.llmttestrunner.artifact.MatcherType
 import io.llmttestrunner.artifact.TestArtifact
+import io.llmttestrunner.artifact.TestCommand
 import io.llmttestrunner.artifact.TestStep
 import io.llmttestrunner.llm.BridgeLLMService
+import io.llmttestrunner.llm.LLMService
+import org.json.JSONArray
 
 fun llmTest(
     artifact: String,
@@ -95,8 +101,8 @@ class LLMTestOrchestrator(
                 println("Generating new artifact...")
             }
 
-            val artifact = executeWithRealTimeGeneration(artifactPath, steps)
-            artifactManager.saveArtifact(artifactPath, artifact)
+            val artifact = executeWithRealTimeGeneration(steps)
+            // artifactManager.saveArtifact(artifactPath, artifact)
             println("Artifact saved")
         }
 
@@ -107,15 +113,8 @@ class LLMTestOrchestrator(
      * Execute test with real-time command generation.
      * Each step captures actual screen state for LLM context.
      */
-    private fun executeWithRealTimeGeneration(
-        testName: String,
-        steps: List<String>
-    ): TestArtifact {
-        val bridgeService = BridgeLLMService.create()
-
-        if (!bridgeService.checkHealth()) {
-            throw RuntimeException("Bridge service not responding")
-        }
+    private fun executeWithRealTimeGeneration(steps: List<String>): TestArtifact {
+        val bridgeService: LLMService = BridgeLLMService.create()
 
         val generatedSteps = mutableListOf<TestStep>()
 
@@ -123,32 +122,29 @@ class LLMTestOrchestrator(
             println("[${index + 1}/${steps.size}] $stepDescription")
 
             val screenContext = adapter.captureScreenState()
-            val commandString = bridgeService.generateCommandWithContext(stepDescription, screenContext)
-            
-            val generator = ArtifactGenerator()
-            val testCommand = generator.parseCommandString(commandString)
+            val commands = bridgeService.generateCommand(stepDescription, screenContext)
+
+            val testCommands = parseCommands(commands)
 
             try {
-                adapter.execute(testCommand)
+                testCommands.forEach { testCommand ->
+                    adapter.execute(testCommand)
+                }
             } catch (e: Exception) {
                 println("  Failed: ${e.message}")
                 throw e
             }
-
             generatedSteps.add(
                 TestStep(
-                    id = java.util.UUID.randomUUID().toString(),
                     naturalLanguage = stepDescription,
-                    generatedCommand = testCommand,
+                    generatedCommands = testCommands,
                     screenContext = screenContext
                 )
             )
         }
 
         return TestArtifact(
-            testName = testName,
             createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis(),
             steps = generatedSteps
         )
     }
@@ -158,11 +154,59 @@ class LLMTestOrchestrator(
             println("[${index + 1}/${artifact.steps.size}] ${step.naturalLanguage}")
 
             try {
-                adapter.execute(step.generatedCommand)
+                step.generatedCommands.forEach {
+                    adapter.execute(it)
+                }
             } catch (e: Exception) {
                 println("  Failed: ${e.message}")
                 throw e
             }
+        }
+    }
+
+    private fun parseCommands(jsonList: JSONArray): List<TestCommand> {
+        val testCommands = mutableListOf<TestCommand>()
+        for (i in 0 until jsonList.length()) {
+            val json = jsonList.getJSONObject(i)
+            val matcherJson = json.getJSONObject("matcher")
+            val matcher = Matcher(
+                type = parseMatcherType(matcherJson.getString("type")),
+                value = matcherJson.getString("value")
+            )
+
+            testCommands.add(
+                TestCommand(
+                    action = parseActionType(json.getString("action")),
+                    value = json.getString("value"),
+                    matcher = matcher
+                )
+            )
+        }
+        return testCommands
+    }
+
+    private fun parseActionType(action: String): ActionType {
+        return when (action) {
+            "click" -> ActionType.CLICK
+            "longClick" -> ActionType.LONG_CLICK
+            "doubleClick" -> ActionType.DOUBLE_CLICK
+            "typeText" -> ActionType.TYPE_TEXT
+            "clearText" -> ActionType.CLEAR_TEXT
+            "scrollTo" -> ActionType.SCROLL_TO
+            "assertVisible" -> ActionType.ASSERT_VISIBLE
+            "assertText" -> ActionType.ASSERT_TEXT
+            "assertContains" -> ActionType.ASSERT_CONTAINS
+            else -> throw IllegalArgumentException("Unsupported action: $action")
+        }
+    }
+
+    private fun parseMatcherType(type: String): MatcherType {
+        return when (type) {
+            "testTag" -> MatcherType.TEST_TAG
+            "hierarchy" -> MatcherType.HIERARCHY
+            "text" -> MatcherType.TEXT
+            "contentDescription" -> MatcherType.CONTENT_DESCRIPTION
+            else -> throw IllegalArgumentException("Unsupported matcher type: $type")
         }
     }
 }

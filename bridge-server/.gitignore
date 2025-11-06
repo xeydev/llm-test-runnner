@@ -1,0 +1,12 @@
+# Build outputs
+build/
+.gradle/
+
+# Runtime files
+*.log
+*.pid
+
+# IDE
+.idea/
+*.iml
+
