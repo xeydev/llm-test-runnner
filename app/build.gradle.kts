@@ -45,6 +45,9 @@ android {
 }
 
 dependencies {
+    // LLM Test Framework
+    androidTestImplementation(project(":llm-testrunner"))
+    
     // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -63,16 +66,9 @@ dependencies {
     // Unit Testing
     testImplementation(libs.junit)
 
-    // Instrumented Testing
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    // Instrumented Testing (required for Kaspresso)
     androidTestImplementation(libs.kaspresso)
     androidTestImplementation(libs.kaspresso.compose)
-    androidTestImplementation(libs.androidx.uiautomator)
-    androidTestImplementation(libs.gson)
-    androidTestImplementation(libs.okhttp)
 }
 
 /**

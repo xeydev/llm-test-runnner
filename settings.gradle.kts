@@ -21,4 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "LLMTest"
 include(":app")
-include(":bridge-server")
+include(":llm-testrunner")
+include(":llm-bridge")
+include(":llm-common")

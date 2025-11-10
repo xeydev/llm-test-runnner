@@ -29,9 +29,10 @@ The system consists of three main components:
 
 1. **Android App** (`app/`)
    - Jetpack Compose UI with test instrumentation
+   - Test orchestrator that caches artifacts and manages test flow
    - Test adapter that communicates with bridge server
    - DSL for writing natural language tests
-   - Artifact collection (screenshots, view hierarchy)
+   - Artifact collection (screen context, generated commands)
 
 2. **Bridge Server** (`bridge-server/`)
    - Kotlin/Ktor server that acts as intermediary
@@ -176,7 +177,7 @@ fun myNaturalLanguageTest() = runTest {
 
 ### LLM Model Selection
 
-Edit `bridge-server/src/main/kotlin/io/llmtest/bridge/LLMProvider.kt`:
+Edit `bridge-server/src/main/kotlin/io/llmtest/bridge/LLMServiceFactory.kt`:
 
 **OpenAI:**
 ```kotlin
@@ -209,11 +210,26 @@ The LLM prioritizes matchers in this order:
 
 ## 📊 Test Artifacts
 
-After each test run, artifacts are saved to the specified directory:
+After each **successful** test run, artifacts are automatically saved to your local machine via the bridge server.
+
+### Configuration
+
+The artifact save location is configured in `build.gradle.kts`:
+
+```kotlin
+// Configuration for bridge server
+val bridgeServerPort = 37546
+val artifactsDirectory = file("app/src/androidTest/artifacts")
+```
+
+You can change `artifactsDirectory` to any path on your local machine.
+
+### Artifact Structure
 
 ```
 artifacts/
-├── my_test_name.json          # Test execution log
+├── basic_submit.json          # Test execution log
+├── multiple_submissions.json
 └── ...
 ```
 
